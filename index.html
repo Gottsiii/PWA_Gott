@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fracciones PWA - Aprendizaje Interactivo</title>
+    <!-- Configuración del tema y Manifest PWA -->
+    <meta name="theme-color" content="#1D4ED8">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Importación de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos base */
+        .fraction-display {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        .numerator {
+            border-bottom: 3px solid #333;
+            padding: 0 5px;
+            display: inline-block;
+        }
+        
+        /* Estilo para la representación visual (Conceptos) */
+        .whole-unit-container {
+            display: flex;
+            flex-wrap: wrap; 
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+        .whole-unit {
+            display: inline-flex;
+            overflow: hidden;
+            border: 2px solid #3B82F6;
+            margin: 0 2px;
+            height: 40px;
+            min-width: 40px; 
+            border-radius: 4px;
+        }
+        .unit-part {
+            flex-grow: 1;
+            height: 100%;
+            border-right: 1px solid #93C5FD;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+        }
+        .unit-part:last-child {
+            border-right: none;
+        }
+        .filled-part-green {
+            background-color: #10B981; /* Tailwind green-500 */
+        }
+        .filled-part-blue {
+            background-color: #3B82F6; /* Tailwind blue-500 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col">
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen" class="bg-blue-700 text-white fixed inset-0 flex justify-center items-center z-50 transition-opacity duration-500">
+        <div class="text-center p-8">
+            <svg class="animate-spin h-10 w-10 text-white mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <h1 class="text-3xl font-bold">Fracciones Interactivas</h1>
+            <p class="mt-2 text-sm">Cargando módulos de aprendizaje...</p>
+        </div>
+    </div>
+    
+    <!-- APP SHELL / Contenido Principal -->
+    <header class="bg-blue-700 shadow-xl p-4 text-white sticky top-0 z-10">
+        <h1 class="text-xl font-bold">PWA Fracciones y Mixtos</h1>
+    </header>
+
+    <!-- BARRA DE NAVEGACIÓN (TABS) -->
+    <nav class="bg-white shadow-md">
+        <div class="max-w-4xl mx-auto flex justify-center">
+            <button id="nav-concepts" onclick="switchMode('concepts')" class="px-6 py-3 text-lg font-medium border-b-4 border-transparent hover:border-blue-500 text-gray-600 transition duration-150">Conceptos</button>
+            <button id="nav-practice" onclick="switchMode('practice')" class="px-6 py-3 text-lg font-medium border-b-4 border-transparent hover:border-blue-500 text-gray-600 transition duration-150">Práctica</button>
+            <button id="nav-exam" onclick="switchMode('exam')" class="px-6 py-3 text-lg font-medium border-b-4 border-transparent hover:border-blue-500 text-gray-600 transition duration-150">Examen</button>
+        </div>
+    </nav>
+
+
+    <main id="app-content" class="flex-grow p-4 md:p-8 opacity-0 transition-opacity duration-500">
+        <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-6 md:p-8 mt-6">
+
+            <!-- Botón de Notificaciones PUSH -->
+            <div class="text-center mb-6">
+                <button id="push-btn" onclick="requestNotificationPermission()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-xl transition duration-300 shadow-md">
+                    <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.405L4 17h5m6 0v2a3 3 0 11-6 0v-2m6 0H9"></path></svg>
+                    Activar Notificaciones Push
+                </button>
+            </div>
+
+            <!-- 1. SECCIÓN DE CONCEPTOS -->
+            <div id="concepts-section" class="hidden">
+                <h2 class="text-3xl font-extrabold text-blue-700 mb-6 border-b pb-2">Conceptos y Ejemplos Visuales</h2>
+                <div id="concepts-container" class="space-y-8">
+                    <!-- Ejemplos dinámicos se insertarán aquí -->
+                    <p class="text-center text-gray-500">Cargando ejemplos visuales...</p>
+                </div>
+                <div class="mt-8 text-center">
+                    <button onclick="generateConceptExamples()" class="bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold py-2 px-4 rounded-xl transition duration-300">
+                        <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Recargar Ejemplos
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. SECCIÓN DE PRÁCTICA (Default) -->
+            <div id="practice-section" class="hidden">
+                <h2 class="text-3xl font-extrabold text-gray-800 mb-6 border-b pb-2">Práctica: Impropia a Mixto</h2>
+                <p class="text-lg text-gray-600 mb-4">Convierte la siguiente fracción impropia a número mixto. El denominador de tu respuesta debe ser el mismo que el de la pregunta.</p>
+                
+                <!-- Pregunta -->
+                <div class="bg-blue-50 p-6 rounded-lg mb-6 text-center shadow-inner border-l-4 border-blue-400">
+                    <div id="question-text" class="text-lg text-gray-700 mb-4 font-medium">Fracción a convertir:</div>
+                    <div id="fraction-question" class="fraction-display text-gray-900 font-extrabold flex justify-center items-baseline space-x-1">
+                        <!-- Fracción se inserta aquí (ej. 11/4) -->
+                    </div>
+                </div>
+
+                <!-- Feedback -->
+                <div id="feedback" class="text-center text-xl font-bold mb-4 min-h-[2rem]"></div>
+                
+                <!-- Inputs de Respuesta -->
+                <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <input type="number" id="input-integer" placeholder="Entero" class="w-full sm:w-1/3 p-3 border-2 border-gray-300 rounded-lg text-xl text-center focus:border-blue-500 focus:ring-blue-500 shadow-sm" min="0">
+                    <div class="flex items-center space-x-1 w-full sm:w-2/3">
+                        <input type="number" id="input-numerator" placeholder="Num." class="w-1/2 p-3 border-2 border-gray-300 rounded-lg text-xl text-center focus:border-blue-500 focus:ring-blue-500 shadow-sm" min="0">
+                        <span class="fraction-display text-gray-500">/</span>
+                        <input type="number" id="input-denominator" placeholder="Den." class="w-1/2 p-3 border-2 border-gray-300 rounded-lg text-xl text-center focus:border-blue-500 focus:ring-blue-500 shadow-sm" min="1">
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="mt-6 flex space-x-4">
+                    <button id="check-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-300">
+                        Comprobar Respuesta
+                    </button>
+                    <button id="next-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg focus:outline-none" style="display: none;">
+                        Siguiente Pregunta
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. SECCIÓN DE EXAMEN (Copia de Práctica, solo cambia la lógica JS) -->
+            <div id="exam-section" class="hidden">
+                <h2 class="text-3xl font-extrabold text-red-700 mb-6 border-b pb-2">Examen Estricto</h2>
+                 <p class="text-lg text-gray-600 mb-4">Convierte la fracción. En el examen, **la fracción de tu número mixto DEBE estar simplificada a su mínima expresión** para ser correcta.</p>
+                
+                <!-- Pregunta -->
+                <div class="bg-red-50 p-6 rounded-lg mb-6 text-center shadow-inner border-l-4 border-red-400">
+                    <div id="exam-question-text" class="text-lg text-gray-700 mb-4 font-medium">Fracción a convertir:</div>
+                    <div id="exam-fraction-question" class="fraction-display text-gray-900 font-extrabold flex justify-center items-baseline space-x-1">
+                        <!-- Fracción se inserta aquí (ej. 11/4) -->
+                    </div>
+                </div>
+
+                <!-- Feedback -->
+                <div id="exam-feedback" class="text-center text-xl font-bold mb-4 min-h-[2rem]"></div>
+                
+                <!-- Inputs de Respuesta -->
+                <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <input type="number" id="exam-input-integer" placeholder="Entero" class="w-full sm:w-1/3 p-3 border-2 border-gray-300 rounded-lg text-xl text-center focus:border-red-500 focus:ring-red-500 shadow-sm" min="0">
+                    <div class="flex items-center space-x-1 w-full sm:w-2/3">
+                        <input type="number" id="exam-input-numerator" placeholder="Num." class="w-1/2 p-3 border-2 border-gray-300 rounded-lg text-xl text-center focus:border-red-500 focus:ring-red-500 shadow-sm" min="0">
+                        <span class="fraction-display text-gray-500">/</span>
+                        <input type="number" id="exam-input-denominator" placeholder="Den." class="w-1/2 p-3 border-2 border-gray-300 rounded-lg text-xl text-center focus:border-red-500 focus:ring-red-500 shadow-sm" min="1">
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="mt-6 flex space-x-4">
+                    <button id="exam-check-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-red-300" onclick="checkAnswer('exam')">
+                        Comprobar Examen
+                    </button>
+                    <button id="exam-next-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-xl transition duration-300 shadow-lg focus:outline-none" style="display: none;" onclick="generateQuestion('exam')">
+                        Siguiente Pregunta
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- Barra de Progreso y Puntuación -->
+            <div class="mt-10 pt-4 border-t border-gray-300">
+                <h3 class="text-xl font-semibold mb-3 text-gray-700">Progreso del Usuario</h3>
+                <div class="flex justify-between text-sm font-medium mb-1">
+                    <span id="score-display">Puntuación: 0</span>
+                    <span id="level-display">Nivel: 1</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-green-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p id="status-firebase" class="text-xs mt-2 text-gray-500 text-center">Estado de la sincronización...</p>
+                <p id="push-status" class="text-xs mt-1 text-gray-500 text-center">Estado de las Notificaciones Push: Desactivadas</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para Notificaciones (solo como fallback de UI, no PUSH) -->
+    <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl transform scale-95 transition-all">
+            <h3 id="modal-title" class="text-xl font-bold mb-3 text-gray-800"></h3>
+            <p id="modal-message" class="text-gray-600 mb-4"></p>
+            <button id="modal-close" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition duration-300">Aceptar</button>
+        </div>
+    </div>
+    
+    <!-- FIREBASE Imports y Lógica de la Aplicación -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // --- Variables Globales (Ajustadas para PRUEBA LOCAL) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // ----------------------------------------------------------------------
+        
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+        let currentMode = 'practice'; // Estado: concepts, practice, exam
+
+        // Estado local de la aplicación
+        let currentScore = 0;
+        let currentLevel = 1;
+        let questionsAnswered = 0;
+        const QUESTIONS_PER_LEVEL = 5;
+        
+        // Estado de la Pregunta Actual
+        let correctInt, correctNum, correctDen; 
+        
+        // Contenedores del DOM
+        const statusFirebaseEl = document.getElementById('status-firebase');
+        const pushStatusEl = document.getElementById('push-status');
+        const scoreDisplay = document.getElementById('score-display');
+        const levelDisplay = document.getElementById('level-display');
+        const progressBar = document.getElementById('progress-bar');
+
+        // Referencia al Service Worker después del registro
+        let swRegistration = null; 
+        
+        // --- Funciones de Utilidad ---
+        
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        // Máximo Común Divisor (Necesario para simplificar fracciones en modo Examen)
+        function gcd(a, b) {
+            return b ? gcd(b, a % b) : a;
+        }
+
+        const showModal = (title, message) => {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        };
+
+        const hideModal = () => {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal').classList.remove('flex');
+        };
+
+        document.getElementById('modal-close').addEventListener('click', hideModal);
+
+        const vibrate = (pattern) => {
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern); 
+            }
+        };
+
+        // --- Lógica de Notificaciones Push (NUEVO) ---
+
+        // Clave VAPID pública de ejemplo (necesitas generar la tuya en un entorno real)
+        const VAPID_PUBLIC_KEY = 'BCtN9yV6Q_0H30t-A_jR5q20e2xX81mQe_5bO78q-zO4bT2i-iT8Y9q_8kE_6tX_y1Q_3dY_9cW_9kQ'; // Clave de ejemplo
+
+        window.requestNotificationPermission = async () => {
+            if (!('serviceWorker' in navigator) || !swRegistration) {
+                showModal('Error de PWA', 'El Service Worker no está disponible o registrado.');
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                pushStatusEl.textContent = 'Estado de las Notificaciones Push: Permiso denegado';
+                return;
+            }
+            
+            pushStatusEl.textContent = 'Estado de las Notificaciones Push: Suscribiendo...';
+
+            try {
+                // Suscribir al usuario para notificaciones push
+                const subscription = await swRegistration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                });
+                
+                // Aquí deberías enviar la suscripción al servidor para almacenarla,
+                // pero por ahora solo confirmamos la acción en el cliente.
+                console.log('Suscripción Push Exitosa:', subscription);
+                pushStatusEl.textContent = 'Estado de las Notificaciones Push: ¡ACTIVAS!';
+                document.getElementById('push-btn').disabled = true;
+
+            } catch (err) {
+                console.error('Fallo en la suscripción Push:', err);
+                pushStatusEl.textContent = 'Estado de las Notificaciones Push: Error al suscribir.';
+            }
+        };
+
+        async function sendLevelUpPush(level) {
+            if ('serviceWorker' in navigator && swRegistration && Notification.permission === 'granted') {
+                try {
+                    // Crea una "notificación silente" que se envía al Service Worker
+                    const payload = {
+                        title: `¡Felicidades! Nivel ${level} Alcanzado 🚀`,
+                        body: `Has completado el Nivel ${level - 1}. ¡Sigue practicando!`,
+                        level: level
+                    };
+
+                    // El Service Worker recibirá este mensaje y lo mostrará como Notificación Push
+                    swRegistration.active.postMessage(JSON.stringify(payload));
+                    
+                } catch (e) {
+                    console.error("Error al enviar mensaje al SW:", e);
+                }
+            } else {
+                // Fallback a modal si no hay PUSH
+                showModal('¡Nivel Completado!', `¡Has alcanzado el Nivel ${level}! Sigue practicando.`);
+            }
+        }
+        
+        // --- Lógica de la Interfaz (Modos/Navegación) ---
+
+        window.switchMode = (mode) => {
+            currentMode = mode;
+            // Ocultar/Mostrar secciones
+            document.getElementById('concepts-section').classList.add('hidden');
+            document.getElementById('practice-section').classList.add('hidden');
+            document.getElementById('exam-section').classList.add('hidden');
+
+            // Actualizar botones de navegación
+            const navButtons = ['nav-concepts', 'nav-practice', 'nav-exam'];
+            navButtons.forEach(id => {
+                const btn = document.getElementById(id);
+                btn.classList.remove('border-blue-500', 'text-blue-700');
+                btn.classList.add('border-transparent', 'text-gray-600');
+            });
+            
+            const activeNav = document.getElementById(`nav-${mode}`);
+            if(activeNav) {
+                activeNav.classList.add('border-blue-500', 'text-blue-700');
+                activeNav.classList.remove('border-transparent', 'text-gray-600');
+            }
+
+
+            if (mode === 'concepts') {
+                document.getElementById('concepts-section').classList.remove('hidden');
+                generateConceptExamples();
+            } else if (mode === 'practice') {
+                document.getElementById('practice-section').classList.remove('hidden');
+                generateQuestion('practice');
+            } else if (mode === 'exam') {
+                document.getElementById('exam-section').classList.remove('hidden');
+                generateQuestion('exam');
+            }
+        }
+        
+        // (Resto de funciones de Conceptos y Práctica se mantienen iguales, sin cambios)
+        // --- LÓGICA DE CONCEPTOS ---
+        
+        function createVisualUnit(numerator, denominator, colorClass = 'filled-part-blue') {
+            const unit = document.createElement('div');
+            unit.className = 'whole-unit';
+            
+            for (let i = 0; i < denominator; i++) {
+                const part = document.createElement('div');
+                part.className = 'unit-part ' + (i < numerator ? colorClass : 'bg-gray-200');
+                part.style.width = `${100 / denominator}%`;
+                unit.appendChild(part);
+            }
+            return unit;
+        }
+
+        function renderFraction(title, improperN, improperD, description) {
+            const container = document.createElement('div');
+            container.className = 'bg-gray-50 p-5 rounded-lg border shadow-sm';
+            
+            const h3 = document.createElement('h3');
+            h3.className = 'text-xl font-semibold mb-2 text-gray-800';
+            h3.textContent = title;
+            container.appendChild(h3);
+
+            const mathDisplay = document.createElement('div');
+            mathDisplay.className = 'fraction-display text-gray-900 font-extrabold flex justify-center items-baseline space-x-1 mb-3';
+            mathDisplay.innerHTML = `<span class="numerator">${improperN}</span><span class="denominator">${improperD}</span>`;
+            container.appendChild(mathDisplay);
+            
+            const [integerPart, remainderN, remainderD] = convertToMixed(improperN, improperD);
+
+            if (integerPart > 0 || remainderN > 0) {
+                const conversionText = document.createElement('p');
+                conversionText.className = 'text-base font-medium text-blue-600 text-center mb-4';
+                if (integerPart > 0 && remainderN > 0) {
+                    conversionText.innerHTML = `Equivale a: <span class="text-2xl font-extrabold">${integerPart}</span> y <span class="numerator">${remainderN}</span><span class="denominator">${remainderD}</span>`;
+                } else if (integerPart > 0) {
+                     conversionText.innerHTML = `Equivale a: <span class="text-2xl font-extrabold">${integerPart}</span> enteros`;
+                }
+                container.appendChild(conversionText);
+            }
+            
+            const visualizer = document.createElement('div');
+            visualizer.className = 'whole-unit-container';
+            
+            for (let i = 0; i < integerPart; i++) {
+                visualizer.appendChild(createVisualUnit(improperD, improperD, 'filled-part-green'));
+            }
+            if (remainderN > 0) {
+                visualizer.appendChild(createVisualUnit(remainderN, remainderD, 'filled-part-blue'));
+            }
+            
+            const p = document.createElement('p');
+            p.className = 'text-sm text-gray-600 text-center mt-4 pt-2 border-t';
+            p.textContent = description;
+            
+            container.appendChild(visualizer);
+            container.appendChild(p);
+            return container;
+        }
+        
+        function convertToMixed(n, d) {
+            const integerPart = Math.floor(n / d);
+            const remainderN = n % d;
+            return [integerPart, remainderN, d];
+        }
+
+        function generateConceptExamples() {
+            const container = document.getElementById('concepts-container');
+            container.innerHTML = '';
+            
+            // Ejemplo 1: Fracción Propia (N < D)
+            const properD = Math.floor(Math.random() * 5) + 4; 
+            const properN = Math.floor(Math.random() * (properD - 1)) + 1; 
+            container.appendChild(renderFraction(
+                '1. Fracción Propia',
+                properN, properD,
+                `Una fracción propia (${properN}/${properD}) es menor que la unidad (1). La parte pintada siempre cabe en un solo entero.`
+            ));
+
+            // Ejemplo 2: Fracción Impropia (N > D)
+            const improperD = Math.floor(Math.random() * 5) + 3; 
+            const improperN = improperD * 2 + Math.floor(Math.random() * (improperD - 1)) + 1; 
+            container.appendChild(renderFraction(
+                '2. Fracción Impropia (a Mixto)',
+                improperN, improperD,
+                `Una fracción impropia (${improperN}/${improperD}) es mayor que la unidad. Se divide el numerador entre el denominador para obtener el número mixto.`
+            ));
+
+            // Ejemplo 3: Fracción Igual a la Unidad
+            const wholeD = Math.floor(Math.random() * 4) + 3; 
+            const wholeN = wholeD * 3;
+            
+            container.appendChild(renderFraction(
+                '3. Fracción Aparente (Entera)',
+                wholeN, wholeD,
+                `Una fracción aparente (${wholeN}/${wholeD}) representa un número entero exacto. En este caso es ${wholeN/wholeD}.`
+            ));
+        }
+
+        // --- LÓGICA DE PRÁCTICA Y EXAMEN ---
+
+        function generateQuestion(mode) {
+            // Limpiar inputs
+            const inputs = mode === 'practice' 
+                ? ['input-integer', 'input-numerator', 'input-denominator'] 
+                : ['exam-input-integer', 'exam-input-numerator', 'exam-input-denominator'];
+            
+            const checkBtn = document.getElementById(mode === 'practice' ? 'check-btn' : 'exam-check-btn');
+            const nextBtn = document.getElementById(mode === 'practice' ? 'next-btn' : 'exam-next-btn');
+            const feedbackEl = document.getElementById(mode === 'practice' ? 'feedback' : 'exam-feedback');
+            const questionEl = document.getElementById(mode === 'practice' ? 'fraction-question' : 'exam-fraction-question');
+            
+            checkBtn.style.display = 'block';
+            nextBtn.style.display = 'none';
+            feedbackEl.textContent = '';
+            
+            // Generar la pregunta
+            let improperDenominator = Math.floor(Math.random() * 8) + 2; 
+            let integerPart = Math.floor(Math.random() * 4) + 1;
+            let remainderN = Math.floor(Math.random() * (improperDenominator - 1)) + 1;
+            
+            let improperNumerator = (integerPart * improperDenominator) + remainderN;
+            
+            correctInt = integerPart;
+            correctNum = remainderN;
+            correctDen = improperDenominator;
+
+            if (mode === 'exam' && Math.random() < 0.6) {
+                const simplifyFactor = Math.floor(Math.random() * 3) + 2; 
+                
+                const gcd_remainder = gcd(correctNum, correctDen);
+                
+                if (gcd_remainder === 1) { 
+                    improperNumerator *= simplifyFactor;
+                    improperDenominator *= simplifyFactor;
+                    
+                    correctInt = Math.floor(improperNumerator / improperDenominator);
+                    const newRemainder = improperNumerator % improperDenominator;
+                    const divisor = gcd(newRemainder, improperDenominator);
+                    correctNum = newRemainder / divisor;
+                    correctDen = improperDenominator / divisor;
+                }
+            }
+            
+            // Renderizar la pregunta en el DOM
+            questionEl.innerHTML = `<span class="numerator">${improperNumerator}</span><span class="denominator">${improperDenominator}</span>`;
+            
+            // Limpiar inputs
+            inputs.forEach(id => document.getElementById(id).value = '');
+            document.getElementById(inputs[2]).value = improperDenominator; 
+            document.getElementById(inputs[2]).disabled = true;
+
+        }
+
+
+        window.checkAnswer = (mode) => {
+            const intId = mode === 'practice' ? 'input-integer' : 'exam-input-integer';
+            const numId = mode === 'practice' ? 'input-numerator' : 'exam-input-numerator';
+            const denId = mode === 'practice' ? 'input-denominator' : 'exam-input-denominator';
+            const feedbackId = mode === 'practice' ? 'feedback' : 'exam-feedback';
+            const checkBtnId = mode === 'practice' ? 'check-btn' : 'exam-check-btn';
+            const nextBtnId = mode === 'practice' ? 'next-btn' : 'exam-next-btn';
+
+            const userInt = parseInt(document.getElementById(intId).value);
+            const userNum = parseInt(document.getElementById(numId).value);
+            const userDen = parseInt(document.getElementById(denId).value);
+            const feedbackEl = document.getElementById(feedbackId);
+            const questionDenEl = document.getElementById(mode === 'practice' ? 'fraction-question' : 'exam-fraction-question').querySelector('.denominator');
+            const questionDenominator = parseInt(questionDenEl.textContent);
+
+            // Validaciones básicas
+            if (isNaN(userInt) || isNaN(userNum) || isNaN(userDen) || userDen === 0) {
+                showModal('Error de Entrada', 'Por favor, asegúrate de llenar todos los campos numéricos correctamente.');
+                vibrate([100, 50, 100]);
+                return;
+            }
+            
+            let isCorrect = false;
+            let correctFractionText = `${correctInt} $\\frac{${correctNum}}{${correctDen}}$`;
+
+            const userImproperN = (userInt * userDen) + userNum;
+
+            const userGcd = gcd(userNum, userDen);
+            const simplifiedUserNum = userNum / userGcd;
+            const simplifiedUserDen = userDen / userGcd;
+            
+            const improperQuestionN = (correctInt * questionDenominator) + (questionDenominator * correctNum / correctDen); 
+            
+            const valueIsCorrect = (userImproperN / userDen) === (improperQuestionN / questionDenominator);
+
+            if (mode === 'practice') {
+                isCorrect = valueIsCorrect && userDen === questionDenominator && userNum < userDen;
+                
+                if (isCorrect) {
+                     correctFractionText = `${userInt} $\\frac{${userNum}}{${userDen}}$`;
+                }
+
+            } else if (mode === 'exam') {
+                isCorrect = (userInt === correctInt) && 
+                            (simplifiedUserNum === correctNum) && 
+                            (simplifiedUserDen === correctDen);
+                            
+                correctFractionText = `${correctInt} $\\frac{${correctNum}}{${correctDen}}$ (simplificada)`;
+            }
+
+            if (isCorrect) {
+                feedbackEl.textContent = '¡Correcto! Muy bien hecho.';
+                feedbackEl.className = 'text-center text-xl font-bold mb-4 min-h-[2rem] text-green-600';
+                currentScore += 1;
+                questionsAnswered += 1;
+                vibrate([200]);
+            } else {
+                feedbackEl.textContent = `Incorrecto. La respuesta correcta era ${correctFractionText}.`;
+                feedbackEl.className = 'text-center text-xl font-bold mb-4 min-h-[2rem] text-red-600';
+                questionsAnswered += 1;
+                vibrate([100, 50, 100, 50, 100]);
+            }
+
+            document.getElementById(checkBtnId).style.display = 'none';
+            document.getElementById(nextBtnId).style.display = 'block';
+            
+            document.getElementById(denId).disabled = false;
+            
+            updateUI(true);
+            saveProgress();
+        }
+
+        // --- FIREBASE / LOCAL STORAGE LÓGICA ---
+        
+        function saveLocalProgress() {
+            localStorage.setItem('localScore', currentScore);
+            localStorage.setItem('localLevel', currentLevel);
+            localStorage.setItem('localQuestionsAnswered', questionsAnswered);
+            if (!db && !firebaseConfig) {
+                statusFirebaseEl.textContent = 'Guardando en modo local (LocalStorage).';
+            }
+        }
+
+        async function saveProgress() {
+            if (db && userId) { 
+                try {
+                    const progressDocRef = doc(db, 'artifacts', appId, 'users', userId, 'fraction_progress', 'data');
+                    await setDoc(progressDocRef, {
+                        score: currentScore,
+                        level: currentLevel,
+                        questionsAnswered: questionsAnswered,
+                        lastUpdated: new Date().toISOString()
+                    }, { merge: true });
+                    statusFirebaseEl.textContent = `Progreso guardado (Puntuación: ${currentScore}).`;
+                } catch (e) {
+                    console.error("Error al guardar en Firestore (Guardando localmente):", e);
+                    statusFirebaseEl.textContent = 'Error al guardar. Puede estar en modo offline.';
+                    saveLocalProgress();
+                }
+            } else {
+                saveLocalProgress();
+            }
+        }
+
+        function listenToProgress() {
+            if (!userId || !db) return;
+            const progressDocRef = doc(db, 'artifacts', appId, 'users', userId, 'fraction_progress', 'data');
+            
+            onSnapshot(progressDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    currentScore = data.score || 0;
+                    currentLevel = data.level || 1;
+                    questionsAnswered = data.questionsAnswered || 0;
+                    updateUI(false);
+                    statusFirebaseEl.textContent = 'Progreso sincronizado con la nube.';
+                } else {
+                    saveProgress();
+                    statusFirebaseEl.textContent = 'Progreso inicial guardado en la nube.';
+                }
+            }, (error) => {
+                console.error("Error al escuchar el progreso:", error);
+                statusFirebaseEl.textContent = 'Error de conexión a Firestore. Revisando caché.';
+            });
+        }
+        
+        function updateUI(animateChange) {
+            scoreDisplay.textContent = `Puntuación: ${currentScore}`;
+            levelDisplay.textContent = `Nivel: ${currentLevel}`;
+            
+            const progress = (questionsAnswered % QUESTIONS_PER_LEVEL) / QUESTIONS_PER_LEVEL;
+            const progressPercent = Math.round(progress * 100);
+            
+            progressBar.style.width = `${progressPercent}%`;
+
+            if (questionsAnswered > 0 && questionsAnswered % QUESTIONS_PER_LEVEL === 0 && animateChange) {
+                currentLevel += 1;
+                levelDisplay.textContent = `Nivel: ${currentLevel}`;
+                // *** ENVIAR NOTIFICACIÓN PUSH EN LUGAR DE MODAL ***
+                sendLevelUpPush(currentLevel);
+                // ************************************************
+                
+                progressBar.style.width = '100%';
+                setTimeout(() => progressBar.style.width = '0%', 500); 
+            }
+        }
+        
+        // --- INICIALIZACIÓN Y EVENTOS ---
+        
+        function initializeFractionApp() {
+             // Configuración de Firebase (solo si hay configuración)
+            if (firebaseConfig) {
+                statusFirebaseEl.textContent = 'Inicializando Firebase...';
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        statusFirebaseEl.textContent = `Usuario autenticado: ${userId.substring(0, 8)}... Sincronizando progreso.`;
+                    } else {
+                        try {
+                            if (initialAuthToken) { await signInWithCustomToken(auth, initialAuthToken); } 
+                            else { await signInAnonymously(auth); }
+                        } catch (error) { console.error("Error de autenticación:", error); }
+                    }
+                    isAuthReady = true;
+                    if (userId && db) { listenToProgress(); }
+                });
+            } else {
+                 // Modo local si no hay configuración
+                currentScore = parseInt(localStorage.getItem('localScore') || '0');
+                currentLevel = parseInt(localStorage.getItem('localLevel') || '1');
+                questionsAnswered = parseInt(localStorage.getItem('localQuestionsAnswered') || '0');
+                updateUI(false);
+                statusFirebaseEl.textContent = 'Configuración de Firebase no encontrada. Usando modo local (LocalStorage).';
+                isAuthReady = true; 
+            }
+        }
+
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./service-worker.js') 
+                    .then(reg => { 
+                        console.log('Service Worker registrado con éxito:', reg);
+                        swRegistration = reg; // Guardar la referencia
+                        pushStatusEl.textContent = 'Estado de las Notificaciones Push: Listo para activar.';
+                        // Verificar si ya está suscrito
+                        reg.pushManager.getSubscription().then(subscription => {
+                            if (subscription) {
+                                pushStatusEl.textContent = 'Estado de las Notificaciones Push: ¡ACTIVAS!';
+                                document.getElementById('push-btn').disabled = true;
+                            }
+                        });
+                    })
+                    .catch(error => { 
+                        console.error('Fallo en el registro del Service Worker:', error);
+                        pushStatusEl.textContent = 'Estado de las Notificaciones Push: Error de registro.';
+                    });
+            } else {
+                pushStatusEl.textContent = 'Estado de las Notificaciones Push: Navegador no soporta SW.';
+            }
+        }
+        
+        window.onload = () => {
+            // Ocultar Splash Screen
+            const splash = document.getElementById('splash-screen');
+            const app = document.getElementById('app-content');
+            splash.style.opacity = '0';
+            app.style.opacity = '1';
+            setTimeout(() => { splash.style.display = 'none'; }, 500);
+
+            registerServiceWorker();
+            initializeFractionApp();
+            
+            // Event Listeners (para Práctica)
+            document.getElementById('check-btn').addEventListener('click', () => checkAnswer('practice'));
+            document.getElementById('next-btn').addEventListener('click', () => generateQuestion('practice'));
+            
+            // Iniciar en el modo Práctica
+            switchMode('practice');
+        };
+    </script>
+</body>
+</html>

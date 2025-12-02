@@ -1,0 +1,21 @@
+{
+  "name": "Fracciones PWA",
+  "short_name": "Fracciones",
+  "description": "Herramienta de aprendizaje de fracciones y números mixtos offline.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/2563EB/ffffff?text=F",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://placehold.co/512x512/2563EB/ffffff?text=F",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
